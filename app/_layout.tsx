@@ -10,15 +10,14 @@ function AuthGuard() {
   const navigationState = useRootNavigationState();
 
   useEffect(() => {
-    // Wait until both the auth state is resolved and the navigator is mounted
     if (isLoading || !navigationState?.key) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const inAuthGroup = segments[0] === 'auth';
 
     if (!token && !inAuthGroup) {
-      router.replace('/(auth)/login');
+      router.replace('/auth/login');
     } else if (token && inAuthGroup) {
-      router.replace('/(main)');
+      router.replace('/main');
     }
   }, [token, isLoading, segments, navigationState?.key]);
 
@@ -30,8 +29,8 @@ export default function RootLayout() {
     <AuthProvider>
       <AuthGuard />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(main)" />
+        <Stack.Screen name="auth" />
+        <Stack.Screen name="main" />
       </Stack>
       <StatusBar style="auto" />
     </AuthProvider>

@@ -29,7 +29,7 @@ const ALL_FEATURES: Feature[] = [
     icon: '📰',
     title: 'Publish News',
     description: 'Share breaking news and updates with your community',
-    route: '/(main)/news/publish',
+    route: '/main/news/publish',
     color: '#E8F5E9',
   },
   {
@@ -37,7 +37,7 @@ const ALL_FEATURES: Feature[] = [
     icon: '🏘️',
     title: 'Add Town',
     description: 'Register a new town to the platform',
-    route: '/(main)/town/add',
+    route: '/main/town/add',
     color: '#E3F2FD',
     adminOnly: true,
   },
