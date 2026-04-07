@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 
@@ -7,9 +7,11 @@ function AuthGuard() {
   const { token, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const navigationState = useRootNavigationState();
 
   useEffect(() => {
-    if (isLoading) return;
+    // Wait until both the auth state is resolved and the navigator is mounted
+    if (isLoading || !navigationState?.key) return;
 
     const inAuthGroup = segments[0] === '(auth)';
 
@@ -18,7 +20,7 @@ function AuthGuard() {
     } else if (token && inAuthGroup) {
       router.replace('/(main)');
     }
-  }, [token, isLoading, segments]);
+  }, [token, isLoading, segments, navigationState?.key]);
 
   return null;
 }

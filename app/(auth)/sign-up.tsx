@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FormInput } from '@/src/components/FormInput';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
+import { TownPicker } from '@/src/components/TownPicker';
 import { Colors } from '@/src/constants/colors';
 import { useAuth } from '@/src/context/AuthContext';
 import { signup as signupApi } from '@/src/api/townanchorApi';
@@ -28,7 +29,7 @@ const schema = z
       .string()
       .min(1, 'Phone number is required')
       .regex(/^\+?[0-9]{7,15}$/, 'Enter a valid phone number'),
-    town: z.string().min(2, 'Town name must be at least 2 characters'),
+    townId: z.string().min(1, 'Please select your town'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     confirmPassword: z.string(),
   })
@@ -43,10 +44,12 @@ export default function SignUpScreen() {
   const router = useRouter();
   const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTownName, setSelectedTownName] = useState('');
 
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
@@ -56,7 +59,7 @@ export default function SignUpScreen() {
       const res = await signupApi({
         name: data.name,
         phone: data.phone,
-        town: data.town,
+        townId: data.townId,
         password: data.password,
       });
       await login(res.data.token, res.data.user);
@@ -122,15 +125,17 @@ export default function SignUpScreen() {
 
             <Controller
               control={control}
-              name="town"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <FormInput
+              name="townId"
+              render={({ field: { value } }) => (
+                <TownPicker
                   label="Your Town"
-                  placeholder="e.g. Springfield"
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  value={value}
-                  error={errors.town?.message}
+                  selectedTownId={value ?? ''}
+                  selectedTownName={selectedTownName}
+                  onChange={(id, name) => {
+                    setValue('townId', id, { shouldValidate: true });
+                    setSelectedTownName(name);
+                  }}
+                  error={errors.townId?.message}
                 />
               )}
             />

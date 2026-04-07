@@ -11,8 +11,8 @@ export type NewsItem = {
   title: string;
   body: string;
   imageUrl: string | null;
-  town: string;
-  author: { name: string; town: string };
+  town: { _id: string; name: string; district: string; state: string };
+  author: { name: string };
   createdAt: string;
 };
 

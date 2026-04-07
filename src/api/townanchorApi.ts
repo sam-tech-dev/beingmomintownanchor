@@ -1,9 +1,16 @@
 import client from './client';
 
+export type TownSummary = {
+  _id: string;
+  name: string;
+  district: string;
+  state: string;
+};
+
 export type SignupPayload = {
   name: string;
   phone: string;
-  town: string;
+  townId: string;
   password: string;
 };
 
@@ -16,8 +23,9 @@ export type AuthUser = {
   id: string;
   name: string;
   phone: string;
-  town: string;
+  town: TownSummary;
   isVerified: boolean;
+  isAdmin: boolean;
 };
 
 export type AuthResponse = {

@@ -20,9 +20,10 @@ type Feature = {
   description: string;
   route: string;
   color: string;
+  adminOnly?: boolean;
 };
 
-const FEATURES: Feature[] = [
+const ALL_FEATURES: Feature[] = [
   {
     id: 'publish-news',
     icon: '📰',
@@ -31,11 +32,22 @@ const FEATURES: Feature[] = [
     route: '/(main)/news/publish',
     color: '#E8F5E9',
   },
+  {
+    id: 'add-town',
+    icon: '🏘️',
+    title: 'Add Town',
+    description: 'Register a new town to the platform',
+    route: '/(main)/town/add',
+    color: '#E3F2FD',
+    adminOnly: true,
+  },
 ];
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
+
+  const features = ALL_FEATURES.filter((f) => !f.adminOnly || user?.isAdmin);
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -44,14 +56,23 @@ export default function DashboardScreen() {
     ]);
   };
 
+  const townName = user?.town?.name ?? '';
+
   return (
     <SafeAreaView style={styles.safe}>
       {/* Top bar */}
       <View style={styles.topBar}>
         <View>
-          <Text style={styles.greeting}>Hello, {user?.name?.split(' ')[0]} 👋</Text>
+          <View style={styles.greetingRow}>
+            <Text style={styles.greeting}>Hello, {user?.name?.split(' ')[0]} 👋</Text>
+            {user?.isAdmin && (
+              <View style={styles.adminBadge}>
+                <Text style={styles.adminBadgeText}>Admin</Text>
+              </View>
+            )}
+          </View>
           <View style={styles.townBadge}>
-            <Text style={styles.townBadgeText}>📍 {user?.town}</Text>
+            <Text style={styles.townBadgeText}>📍 {townName}</Text>
           </View>
         </View>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
@@ -64,14 +85,16 @@ export default function DashboardScreen() {
         <View style={styles.banner}>
           <Text style={styles.bannerTitle}>Town Anchor Dashboard</Text>
           <Text style={styles.bannerSubtitle}>
-            You are the voice of {user?.town}. Keep your community informed.
+            {user?.isAdmin
+              ? `You have admin access. Manage the platform for ${townName}.`
+              : `You are the voice of ${townName}. Keep your community informed.`}
           </Text>
         </View>
 
         {/* Features */}
         <Text style={styles.sectionTitle}>What would you like to do?</Text>
 
-        {FEATURES.map((feature) => (
+        {features.map((feature) => (
           <TouchableOpacity
             key={feature.id}
             style={styles.featureCard}
@@ -82,7 +105,14 @@ export default function DashboardScreen() {
               <Text style={styles.iconEmoji}>{feature.icon}</Text>
             </View>
             <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>{feature.title}</Text>
+              <View style={styles.featureTitleRow}>
+                <Text style={styles.featureTitle}>{feature.title}</Text>
+                {feature.adminOnly && (
+                  <View style={styles.adminOnlyTag}>
+                    <Text style={styles.adminOnlyText}>Admin</Text>
+                  </View>
+                )}
+              </View>
               <Text style={styles.featureDesc}>{feature.description}</Text>
             </View>
             <Text style={styles.chevron}>›</Text>
@@ -111,10 +141,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   greeting: {
     fontSize: 20,
     fontWeight: '800',
     color: Colors.textPrimary,
+  },
+  adminBadge: {
+    backgroundColor: Colors.accent,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  adminBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.white,
+    letterSpacing: 0.5,
   },
   townBadge: {
     marginTop: 4,
@@ -201,11 +248,27 @@ const styles = StyleSheet.create({
   featureContent: {
     flex: 1,
   },
+  featureTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 3,
+  },
   featureTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: Colors.textPrimary,
-    marginBottom: 3,
+  },
+  adminOnlyTag: {
+    backgroundColor: Colors.accent + '25',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  adminOnlyText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.accent,
   },
   featureDesc: {
     fontSize: 12,
