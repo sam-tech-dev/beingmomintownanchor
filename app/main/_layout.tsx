@@ -14,6 +14,9 @@ export default function MainLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="news/publish" options={{ title: 'Publish News', headerShown: true }} />
       <Stack.Screen name="town/add" options={{ title: 'Add Town', headerShown: true }} />
+      <Stack.Screen name="people/index" options={{ title: 'People', headerShown: true }} />
+      <Stack.Screen name="people/add" options={{ title: 'Add Person', headerShown: true }} />
+      <Stack.Screen name="people/[id]/index" options={{ title: 'Edit Person', headerShown: true }} />
     </Stack>
   );
 }

@@ -33,6 +33,14 @@ const ALL_FEATURES: Feature[] = [
     color: '#E8F5E9',
   },
   {
+    id: 'people',
+    icon: '👥',
+    title: 'Manage People',
+    description: 'Add and manage people records for your town',
+    route: '/main/people',
+    color: '#F3E5F5',
+  },
+  {
     id: 'add-town',
     icon: '🏘️',
     title: 'Add Town',
