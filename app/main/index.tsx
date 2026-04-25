@@ -21,6 +21,7 @@ type Feature = {
   route: string;
   color: string;
   adminOnly?: boolean;
+  requiresVerification?: boolean;
 };
 
 const ALL_FEATURES: Feature[] = [
@@ -31,6 +32,7 @@ const ALL_FEATURES: Feature[] = [
     description: 'Share breaking news and updates with your community',
     route: '/main/news/publish',
     color: '#E8F5E9',
+    requiresVerification: true,
   },
   {
     id: 'people',
@@ -39,6 +41,16 @@ const ALL_FEATURES: Feature[] = [
     description: 'Add and manage people records for your town',
     route: '/main/people',
     color: '#F3E5F5',
+    requiresVerification: true,
+  },
+  {
+    id: 'anchors',
+    icon: '✅',
+    title: 'Manage Anchors',
+    description: 'View, verify, and manage town anchor accounts',
+    route: '/main/anchors',
+    color: '#E8F5E9',
+    adminOnly: true,
   },
   {
     id: 'add-town',
@@ -55,6 +67,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
+  const isVerified = user?.isVerified ?? false;
   const features = ALL_FEATURES.filter((f) => !f.adminOnly || user?.isAdmin);
 
   const handleLogout = () => {
@@ -64,7 +77,7 @@ export default function DashboardScreen() {
     ]);
   };
 
-  const townName = user?.town?.name ?? '';
+  const townName = user?.town?.name ?? 'No town set';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -83,49 +96,86 @@ export default function DashboardScreen() {
             <Text style={styles.townBadgeText}>📍 {townName}</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <View style={styles.topActions}>
+          <TouchableOpacity onPress={() => router.push('/main/profile')} style={styles.editProfileButton}>
+            <Text style={styles.editProfileText}>Edit Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Verification pending banner */}
+        {!isVerified && (
+          <View style={styles.verificationBanner}>
+            <Text style={styles.verificationIcon}>⏳</Text>
+            <View style={styles.verificationTextWrap}>
+              <Text style={styles.verificationTitle}>Verification Pending</Text>
+              <Text style={styles.verificationSubtitle}>
+                Your account is under review. Some features will be unlocked once verified.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Banner */}
         <View style={styles.banner}>
           <Text style={styles.bannerTitle}>Town Anchor Dashboard</Text>
           <Text style={styles.bannerSubtitle}>
             {user?.isAdmin
               ? `You have admin access. Manage the platform for ${townName}.`
-              : `You are the voice of ${townName}. Keep your community informed.`}
+              : `You are the voice of ${townName || 'your community'}. Keep your community informed.`}
           </Text>
         </View>
 
         {/* Features */}
         <Text style={styles.sectionTitle}>What would you like to do?</Text>
 
-        {features.map((feature) => (
-          <TouchableOpacity
-            key={feature.id}
-            style={styles.featureCard}
-            activeOpacity={0.85}
-            onPress={() => router.push(feature.route as any)}
-          >
-            <View style={[styles.iconBox, { backgroundColor: feature.color }]}>
-              <Text style={styles.iconEmoji}>{feature.icon}</Text>
-            </View>
-            <View style={styles.featureContent}>
-              <View style={styles.featureTitleRow}>
-                <Text style={styles.featureTitle}>{feature.title}</Text>
-                {feature.adminOnly && (
-                  <View style={styles.adminOnlyTag}>
-                    <Text style={styles.adminOnlyText}>Admin</Text>
-                  </View>
-                )}
+        {features.map((feature) => {
+          const locked = feature.requiresVerification && !isVerified;
+          return (
+            <TouchableOpacity
+              key={feature.id}
+              style={[styles.featureCard, locked && styles.featureCardLocked]}
+              activeOpacity={locked ? 1 : 0.85}
+              onPress={() => {
+                if (locked) {
+                  Alert.alert(
+                    'Verification Required',
+                    'This feature will be available once your account is verified by an admin.'
+                  );
+                  return;
+                }
+                router.push(feature.route as any);
+              }}
+            >
+              <View style={[styles.iconBox, { backgroundColor: locked ? Colors.border : feature.color }]}>
+                <Text style={styles.iconEmoji}>{locked ? '🔒' : feature.icon}</Text>
               </View>
-              <Text style={styles.featureDesc}>{feature.description}</Text>
-            </View>
-            <Text style={styles.chevron}>›</Text>
-          </TouchableOpacity>
-        ))}
+              <View style={styles.featureContent}>
+                <View style={styles.featureTitleRow}>
+                  <Text style={[styles.featureTitle, locked && styles.featureTitleLocked]}>
+                    {feature.title}
+                  </Text>
+                  {feature.adminOnly && (
+                    <View style={styles.adminOnlyTag}>
+                      <Text style={styles.adminOnlyText}>Admin</Text>
+                    </View>
+                  )}
+                  {locked && (
+                    <View style={styles.lockedTag}>
+                      <Text style={styles.lockedTagText}>Pending</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.featureDesc}>{feature.description}</Text>
+              </View>
+              {!locked && <Text style={styles.chevron}>›</Text>}
+            </TouchableOpacity>
+          );
+        })}
 
         <Text style={styles.moreComingSoon}>More features coming soon...</Text>
       </ScrollView>
@@ -184,13 +234,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  topActions: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 6,
+    marginTop: 4,
+  },
+  editProfileButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  editProfileText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
   logoutButton: {
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 10,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    marginTop: 4,
   },
   logoutText: {
     fontSize: 13,
@@ -287,6 +354,54 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: Colors.textMuted,
     marginLeft: 8,
+  },
+  verificationBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF8E1',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#FFE082',
+    gap: 10,
+  },
+  verificationIcon: {
+    fontSize: 22,
+    marginTop: 2,
+  },
+  verificationTextWrap: {
+    flex: 1,
+  },
+  verificationTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#795548',
+    marginBottom: 2,
+  },
+  verificationSubtitle: {
+    fontSize: 12,
+    color: '#A1887F',
+    lineHeight: 17,
+  },
+  featureCardLocked: {
+    opacity: 0.6,
+  },
+  featureTitleLocked: {
+    color: Colors.textMuted,
+  },
+  lockedTag: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFE082',
+  },
+  lockedTagText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#F57C00',
   },
   moreComingSoon: {
     textAlign: 'center',

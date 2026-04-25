@@ -1,16 +1,28 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TextInput, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PersonCard } from '@/src/components/PersonCard';
 import { Colors } from '@/src/constants/colors';
+import { useAuth } from '@/src/context/AuthContext';
 import { listPersons, type PersonSummary } from '@/src/api/personApi';
 
 const DEBOUNCE_MS = 300;
 
 export default function PeopleScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user?.isVerified) {
+      Alert.alert(
+        'Verification Required',
+        'Your account must be verified before you can manage people.',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
+    }
+  }, []);
   const [persons, setPersons] = useState<PersonSummary[]>([]);
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);

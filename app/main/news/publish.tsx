@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FormInput } from '@/src/components/FormInput';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Colors } from '@/src/constants/colors';
+import { useAuth } from '@/src/context/AuthContext';
 import { publishNews } from '@/src/api/newsApi';
 
 const schema = z.object({
@@ -31,8 +32,19 @@ type FormData = z.infer<typeof schema>;
 
 export default function PublishNewsScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!user?.isVerified) {
+      Alert.alert(
+        'Verification Required',
+        'Your account must be verified before you can publish news.',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
+    }
+  }, []);
 
   const {
     control,

@@ -11,6 +11,7 @@ type AuthState = {
 type AuthContextValue = AuthState & {
   login: (token: string, user: AuthUser) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (user: AuthUser) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -51,8 +52,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setState({ token: null, user: null, isLoading: false });
   }, []);
 
+  const updateUser = useCallback(async (user: AuthUser) => {
+    await SecureStore.setItemAsync('auth_user', JSON.stringify(user));
+    setState((s) => ({ ...s, user }));
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
